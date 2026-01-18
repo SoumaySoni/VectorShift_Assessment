@@ -1,35 +1,37 @@
-// textNode.js
-
-import { useState } from 'react';
-import { Handle, Position } from 'reactflow';
+import { useState, useRef, useEffect } from "react";
+import {BaseNode} from "./BaseNode.js";
 
 export const TextNode = ({ id, data }) => {
-  const [currText, setCurrText] = useState(data?.text || '{{input}}');
+  const [text, setText] = useState(data?.text || "");
+  const textareaRef = useRef(null);
 
-  const handleTextChange = (e) => {
-    setCurrText(e.target.value);
-  };
+  // Auto resize textarea
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+      textareaRef.current.style.height =
+        textareaRef.current.scrollHeight + "px";
+    }
+  }, [text]);
 
   return (
-    <div style={{width: 200, height: 80, border: '1px solid black'}}>
-      <div>
-        <span>Text</span>
-      </div>
-      <div>
-        <label>
-          Text:
-          <input 
-            type="text" 
-            value={currText} 
-            onChange={handleTextChange} 
-          />
-        </label>
-      </div>
-      <Handle
-        type="source"
-        position={Position.Right}
-        id={`${id}-output`}
+    <BaseNode
+      title="Text"
+      variant="text"
+      handles={[
+        {
+          type: "source",
+          position: "right",
+          id: `${id}-output`,
+        },
+      ]}
+    >
+      <textarea
+        ref={textareaRef}
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        placeholder="Enter text..."
       />
-    </div>
+    </BaseNode>
   );
-}
+};

@@ -1,37 +1,21 @@
-import { Handle } from 'reactflow';
+import { Handle } from "reactflow";
+import '../styles/nodes.css'
 
-export const BaseNode = ({title,children,handles = [],width =200,height = 80,
-}) => {
+export const BaseNode = ({ title, variant, children, handles = [] }) => {
   return (
-    <div
-      style={{
-        width,
-        height,
-        border: '1px solid black',
-        padding: 8,
-        boxSizing: 'border-box',
-      }}
-    >
-      {/* Render handles */}
-      {handles.map((handle) => (
+    <div className={`base-node node-${variant}`}>
+      {handles.map((h, i) => (
         <Handle
-          key={handle.id}
-          type={handle.type}
-          position={handle.position}
-          id={handle.id}
-          style={handle.style}
+          key={i}
+          type={h.type}
+          position={h.position}
+          id={h.id}
+          style={h.style}
         />
       ))}
 
-      {/* Title */}
-      <div>
-        <span>{title}</span>
-      </div>
-
-      {/* Node-specific content */}
-      <div>
-        {children}
-      </div>
+      <div className="base-node__header">{title}</div>
+      <div className="base-node__body">{children}</div>
     </div>
   );
 };
