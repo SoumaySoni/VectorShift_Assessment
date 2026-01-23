@@ -97,3 +97,21 @@
     outline: none;
     border-color: #6366f1;
 }
+
+.variable-suggestions {
+    border: 1px solid #e5e7eb;
+    background: #ffffff;
+    border-radius: 6px;
+    margin-top: 4px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+}
+
+.variable-suggestion {
+    padding: 6px 10px;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.variable-suggestion:hover {
+    background: #f3f4f6;
+}

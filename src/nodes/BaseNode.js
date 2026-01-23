@@ -1,15 +1,15 @@
 import { Handle } from "reactflow";
-import '../styles/nodes.css'
+import "../styles/nodes.css";
 
 export const BaseNode = ({ title, variant, children, handles = [] }) => {
   return (
     <div className={`base-node node-${variant}`}>
-      {handles.map((h, i) => (
+      {handles.map((h) => (
         <Handle
-          key={i}
+          key={h.id}
+          id={h.id}       
           type={h.type}
           position={h.position}
-          id={h.id}
           style={h.style}
         />
       ))}
