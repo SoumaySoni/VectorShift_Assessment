@@ -1,7 +1,7 @@
 import {BaseNode} from "./BaseNode";
 
 export const LLMNode = ({ id }) => {
-  console.log("hey llm  ")
+
   return (
     <BaseNode
       title="LLM"

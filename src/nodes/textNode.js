@@ -5,25 +5,14 @@ import { useUpdateNodeInternals } from "reactflow";
 import { useAutoResizeTextarea } from "../hooks/useAutoResizeTextarea";
 import { useTextVariables } from "../hooks/useTextVariables";
 
-// Helper 
-
 export const detectSuggestionMode = (text, cursor) => {
   const before = text.slice(0, cursor);
-
   const fieldMatch = before.match(/{{\s*([\w]+)\.\s*([\w]*)$/);
-  if (fieldMatch) {
-    return { mode: "field", activeNode: fieldMatch[1] };
-  }
-
+  if (fieldMatch) return { mode: "field", activeNode: fieldMatch[1] };
   const nodeMatch = before.match(/{{\s*([\w]*)$/);
-  if (nodeMatch) {
-    return { mode: "node", activeNode: null };
-  }
-
+  if (nodeMatch) return { mode: "node", activeNode: null };
   return null;
 };
-
-// Component 
 
 export const TextNode = ({ id, data }) => {
   const updateNodeInternals = useUpdateNodeInternals();
@@ -46,8 +35,6 @@ export const TextNode = ({ id, data }) => {
     nodeId: id,
     edges,
     setEdges,
-    onBlockedRemove: (v) =>
-      alert(`Cannot remove "{{${v}}}" because it is connected.`),
   });
 
   const inputNodes = useMemo(
@@ -69,7 +56,7 @@ export const TextNode = ({ id, data }) => {
 
   useEffect(() => {
     updateNodeInternals(id);
-  }, [id, variables.length]);
+  }, [id, variables.length, updateNodeInternals]);
 
   const handleChange = (e) => {
     const value = e.target.value;
@@ -112,23 +99,13 @@ export const TextNode = ({ id, data }) => {
 
   const suggestions = useMemo(() => {
     if (!showSuggestions) return [];
-
-    if (mode === "node") {
+    if (mode === "node")
       return inputNodes.map((n) => ({
         label: n.data.name,
         value: `{{${n.data.name}`,
       }));
-    }
-
-    if (mode === "field" && activeNode) {
-      return [
-        {
-          label: "text",
-          value: `{{${activeNode}.text`,
-        },
-      ];
-    }
-
+    if (mode === "field" && activeNode)
+      return [{ label: "text", value: `{{${activeNode}.text` }];
     return [];
   }, [showSuggestions, mode, inputNodes, activeNode]);
 
