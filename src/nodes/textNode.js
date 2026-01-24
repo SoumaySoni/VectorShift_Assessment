@@ -5,9 +5,30 @@ import { useUpdateNodeInternals } from "reactflow";
 import { useAutoResizeTextarea } from "../hooks/useAutoResizeTextarea";
 import { useTextVariables } from "../hooks/useTextVariables";
 
+// Helper 
+
+export const detectSuggestionMode = (text, cursor) => {
+  const before = text.slice(0, cursor);
+
+  const fieldMatch = before.match(/{{\s*([\w]+)\.\s*([\w]*)$/);
+  if (fieldMatch) {
+    return { mode: "field", activeNode: fieldMatch[1] };
+  }
+
+  const nodeMatch = before.match(/{{\s*([\w]*)$/);
+  if (nodeMatch) {
+    return { mode: "node", activeNode: null };
+  }
+
+  return null;
+};
+
+// Component 
+
 export const TextNode = ({ id, data }) => {
   const updateNodeInternals = useUpdateNodeInternals();
   const textareaRef = useRef(null);
+
   const [text, setText] = useState(data?.text || "");
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [mode, setMode] = useState("node");
@@ -34,42 +55,41 @@ export const TextNode = ({ id, data }) => {
     [nodes]
   );
 
+  const variableHandles = useMemo(
+    () =>
+      variables.map((v, i) => ({
+        type: "target",
+        position: "left",
+        id: `${id}-${v}`,
+        style: { top: 40 + i * 24 },
+        label: v,
+      })),
+    [variables, id]
+  );
+
+  useEffect(() => {
+    updateNodeInternals(id);
+  }, [id, variables.length]);
+
   const handleChange = (e) => {
     const value = e.target.value;
     setText(value);
     data.text = value;
 
-    const cursor = e.target.selectionStart;
-    const before = value.slice(0, cursor);
+    const detected = detectSuggestionMode(
+      value,
+      e.target.selectionStart
+    );
 
-    const fieldMatch = before.match(/{{\s*([\w]+)\.\s*([\w]*)$/);
-    const nodeMatch = before.match(/{{\s*([\w]*)$/);
-
-    if (fieldMatch) {
-      setMode("field");
-      setActiveNode(fieldMatch[1]); // 👈 capture node name
-      setShowSuggestions(true);
-    } else if (nodeMatch) {
-      setMode("node");
-      setActiveNode(null);
+    if (detected) {
+      setMode(detected.mode);
+      setActiveNode(detected.activeNode);
       setShowSuggestions(true);
     } else {
       setShowSuggestions(false);
       setActiveNode(null);
     }
   };
-
-  const variableHandles = variables.map((v, i) => ({
-    type: "target",
-    position: "left",
-    id: `${id}-${v}`,
-    style: { top: 40 + i * 24 },
-    label: v,
-  }));
-
-  useEffect(() => {
-  updateNodeInternals(id);
-}, [variables]);
 
   const insertAtCursor = (insertValue) => {
     const textarea = textareaRef.current;
@@ -80,7 +100,6 @@ export const TextNode = ({ id, data }) => {
     const after = text.slice(cursor);
 
     const nextText = before + insertValue + after;
-
     setText(nextText);
     data.text = nextText;
 
@@ -131,6 +150,10 @@ export const TextNode = ({ id, data }) => {
     if (e.key === "Enter") {
       e.preventDefault();
       insertAtCursor(suggestions[activeIndex].value);
+      setShowSuggestions(false);
+    }
+
+    if (e.key === "Escape") {
       setShowSuggestions(false);
     }
   };
