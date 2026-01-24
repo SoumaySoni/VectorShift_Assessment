@@ -10,16 +10,34 @@ import { InputNode } from './nodes/inputNode';
 import { LLMNode } from './nodes/llmNode';
 import { OutputNode } from './nodes/outputNode';
 import { TextNode } from './nodes/textNode';
-
+import { BooleanNode } from './nodes/BooleanNode';
+import { ConcatNode } from "./nodes/ConcatNode";
+import { ConditionNode } from "./nodes/ConditionNode"
+import { DelayNode } from "./nodes/DelayNode"
+import {NumberNode} from "./nodes/NumberNode"
+import { NodeErrorBoundary } from "./components/NodeErrorBoundary";
 import 'reactflow/dist/style.css';
+
 
 const gridSize = 20;
 const proOptions = { hideAttribution: true };
+
+const withErrorBoundary = (NodeComponent) => (props) => (
+  <NodeErrorBoundary>
+    <NodeComponent {...props} />
+  </NodeErrorBoundary>
+);
+
 const nodeTypes = {
-  customInput: InputNode,
-  llm: LLMNode,
-  customOutput: OutputNode,
-  text: TextNode,
+  customInput: withErrorBoundary(InputNode),
+  text: withErrorBoundary(TextNode),
+  llm: withErrorBoundary(LLMNode),
+  customOutput: withErrorBoundary(OutputNode),
+  boolean: withErrorBoundary(BooleanNode),
+  concat: withErrorBoundary(ConcatNode),
+  condition: withErrorBoundary(ConditionNode),
+  delay: withErrorBoundary(DelayNode),
+  number: withErrorBoundary(NumberNode),
 };
 
 const selector = (state) => ({

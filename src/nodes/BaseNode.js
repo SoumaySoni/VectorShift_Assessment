@@ -2,7 +2,6 @@ import { Handle } from "reactflow";
 import "../styles/nodes.css";
 
 export const BaseNode = ({ title, variant, children, handles = [] }) => {
-  console.log("hey base")
 
   return (
     <div className={`base-node node-${variant}`}>

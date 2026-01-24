@@ -143,3 +143,13 @@
 .react-flow__handle.removing {
   opacity: 0;
 }
+
+.variable-suggestion {
+    padding: 6px 8px;
+    cursor: pointer;
+}
+
+.variable-suggestion.active {
+    background: #eef2ff;
+    color: #1e40af;
+}

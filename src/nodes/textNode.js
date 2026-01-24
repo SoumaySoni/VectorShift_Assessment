@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { BaseNode } from "./BaseNode";
 import { useStore } from "../store";
 import { useUpdateNodeInternals } from "reactflow";
@@ -8,10 +8,11 @@ import { useTextVariables } from "../hooks/useTextVariables";
 export const TextNode = ({ id, data }) => {
   const updateNodeInternals = useUpdateNodeInternals();
   const textareaRef = useRef(null);
-
   const [text, setText] = useState(data?.text || "");
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [mode, setMode] = useState("node");
+  const [activeNode, setActiveNode] = useState(null);
+  const [activeIndex, setActiveIndex] = useState(0);
 
   const nodes = useStore((s) => s.nodes);
   const edges = useStore((s) => s.edges);
@@ -28,7 +29,10 @@ export const TextNode = ({ id, data }) => {
       alert(`Cannot remove "{{${v}}}" because it is connected.`),
   });
 
-  const inputNodes = nodes.filter((n) => n.type === "customInput");
+  const inputNodes = useMemo(
+    () => nodes.filter((n) => n.type === "customInput"),
+    [nodes]
+  );
 
   const handleChange = (e) => {
     const value = e.target.value;
@@ -43,12 +47,15 @@ export const TextNode = ({ id, data }) => {
 
     if (fieldMatch) {
       setMode("field");
+      setActiveNode(fieldMatch[1]); // 👈 capture node name
       setShowSuggestions(true);
     } else if (nodeMatch) {
       setMode("node");
+      setActiveNode(null);
       setShowSuggestions(true);
     } else {
       setShowSuggestions(false);
+      setActiveNode(null);
     }
   };
 
@@ -64,7 +71,74 @@ export const TextNode = ({ id, data }) => {
   updateNodeInternals(id);
 }, [variables]);
 
-console.log("hey text")
+  const insertAtCursor = (insertValue) => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+
+    const cursor = textarea.selectionStart;
+    const before = text.slice(0, cursor).replace(/{{\s*[\w.]*$/, "");
+    const after = text.slice(cursor);
+
+    const nextText = before + insertValue + after;
+
+    setText(nextText);
+    data.text = nextText;
+
+    requestAnimationFrame(() => {
+      textarea.focus();
+      const pos = before.length + insertValue.length;
+      textarea.selectionStart = textarea.selectionEnd = pos;
+    });
+  };
+
+  const suggestions = useMemo(() => {
+    if (!showSuggestions) return [];
+
+    if (mode === "node") {
+      return inputNodes.map((n) => ({
+        label: n.data.name,
+        value: `{{${n.data.name}`,
+      }));
+    }
+
+    if (mode === "field" && activeNode) {
+      return [
+        {
+          label: "text",
+          value: `{{${activeNode}.text`,
+        },
+      ];
+    }
+
+    return [];
+  }, [showSuggestions, mode, inputNodes, activeNode]);
+
+  const handleKeyDown = (e) => {
+    if (!showSuggestions || suggestions.length === 0) return;
+
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setActiveIndex((i) => (i + 1) % suggestions.length);
+    }
+
+    if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setActiveIndex((i) =>
+        i === 0 ? suggestions.length - 1 : i - 1
+      );
+    }
+
+    if (e.key === "Enter") {
+      e.preventDefault();
+      insertAtCursor(suggestions[activeIndex].value);
+      setShowSuggestions(false);
+    }
+  };
+
+  useEffect(() => {
+    if (showSuggestions) setActiveIndex(0);
+  }, [showSuggestions, mode]);
+
   return (
     <BaseNode
       title="Text"
@@ -78,17 +152,27 @@ console.log("hey text")
         ref={textareaRef}
         value={text}
         onChange={handleChange}
+        onKeyDown={handleKeyDown}
         placeholder="Type text… use {{ }}"
         style={{ resize: "none", width: "100%" }}
       />
 
       {showSuggestions && (
         <div className="variable-suggestions">
-          {mode === "node" &&
-            inputNodes.map((n) => (
-              <div key={n.id}>{n.data.name}</div>
-            ))}
-          {mode === "field" && <div>text</div>}
+          {suggestions.map((s, i) => (
+            <div
+              key={s.label}
+              className={`variable-suggestion ${i === activeIndex ? "active" : ""
+                }`}
+              onMouseEnter={() => setActiveIndex(i)}
+              onClick={() => {
+                insertAtCursor(s.value);
+                setShowSuggestions(false);
+              }}
+            >
+              {s.label}
+            </div>
+          ))}
         </div>
       )}
     </BaseNode>

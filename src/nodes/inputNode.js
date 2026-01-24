@@ -15,7 +15,6 @@ export const InputNode = ({ id, data }) => {
       data.inputType = inputType;
     }
   }, [name, inputType, data]);
-console.log("hey input")
 
   return (
     <BaseNode
