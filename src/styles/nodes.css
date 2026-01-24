@@ -115,3 +115,31 @@
 .variable-suggestion:hover {
     background: #f3f4f6;
 }
+
+.variable-labels {
+  position: absolute;
+  left: -70px; /* space for labels */
+  top: 0;
+}
+
+.variable-label {
+  position: absolute;
+  font-size: 11px;
+  color: #555;
+  background: #f5f5f5;
+  padding: 2px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.react-flow__handle {
+  transition: opacity 200ms ease;
+}
+
+.react-flow__handle {
+  opacity: 1;
+}
+
+.react-flow__handle.removing {
+  opacity: 0;
+}
